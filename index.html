@@ -14,7 +14,7 @@
     .brand { font-weight:900; font-size:16px; color:var(--gold); }
     .balances { display:flex; gap:8px; }
     .pill { background:var(--card); border:1px solid var(--bdr); padding:5px 10px; border-radius:20px; font-size:13px; font-weight:800; }
-    .pill.wallet { border-color:#10b981; color:#34d399; }
+    .pill.wallet { background:linear-gradient(180deg,#291d06,#171003); border:1.5px solid var(--gold); color:var(--gold); box-shadow:0 0 12px rgba(251,191,36,.3); padding:5px 12px; }
     .pill.gems { border-color:#38bdf8; color:#7dd3fc; }
     .main { flex:1; overflow-y:auto; padding:14px 14px 145px; scroll-behavior:smooth; }
     .screen { display:none; }
@@ -75,7 +75,7 @@
     <div class="brand">🧪 COLOR PAISA</div>
     <div class="balances">
       <div class="pill gems">💎 <span id="ui-gems">0</span></div>
-      <div class="pill wallet">₹<span id="ui-wallet">0.00</span></div>
+          <div class="pill wallet" onclick="switchTab('wallet')" style="cursor:pointer;">💳 Wallet • ₹<span id="ui-wallet">0.00</span></div>
     </div>
   </div>
   <div class="main" id="main-scroll">
