@@ -33,6 +33,16 @@ export default async function handler(req, res) {
     };
 
     if (text.startsWith('/start')) {
+            const refCode = text.slice(7).trim();
+      if (refCode.startsWith('ref_')) {
+        const referrerId = refCode.slice(4);
+        if (referrerId && referrerId !== String(chatId)) {
+          await fetch(`https://colourpaisabot-default-rtdb.asia-southeast1.firebasedatabase.app/users/${chatId}/referredBy.json`, {
+            method: 'PUT',
+            body: JSON.stringify(referrerId)
+          });
+        }
+      }
       const welcome = `🧪 <b>Welcome to Color Paisa!</b>\n\n💧 Sort colors, complete levels, and earn real rewards!\n💰 <b>1,000 Gems = ₹1.00</b> (Instant Cloud Save)\n\n👇 Tap <b>Play Game</b> below to start earning!\n\n🎮 <b>More Earning Games:</b>\n👉 https://t.me/TapToPaisa_Official_bot?start=${chatId}\n👉 https://t.me/BlockPaisaGame_bot?start=${chatId}`;
       await fetch(tgApi, {
         method: 'POST',
