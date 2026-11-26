@@ -19,10 +19,10 @@
     .main { flex:1; overflow-y:auto; padding:14px 14px 145px; scroll-behavior:smooth; }
     .screen { display:none; }
     .screen.active { display:block; }
-    .streak-card { background:linear-gradient(135deg,#2b1554,#1a0d36); border:1px solid var(--gdark); border-radius:16px; padding:12px; margin-bottom:14px; }
-    .streak-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .streak-card { position:sticky; top:-14px; z-index:12; background:linear-gradient(135deg,#2b1554,#1a0d36); border:1px solid var(--gdark); border-radius:16px; padding:10px 12px; margin-bottom:14px; box-shadow:0 8px 20px rgba(0,0,0,.65); }
+    .streak-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
     .streak-days { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-    .day-box { background:#120826; border:1px solid var(--bdr); border-radius:8px; padding:6px 2px; text-align:center; font-size:10px; }
+    .day-box { background:#120826; border:1px solid var(--bdr); border-radius:8px; padding:5px 2px; text-align:center; font-size:10px; }
     .day-box.done { background:rgba(251,191,36,.22); border-color:var(--gold); color:var(--gold); font-weight:800; }
     .map-wrapper { position:relative; display:flex; flex-direction:column-reverse; align-items:center; gap:28px; padding:20px 0 40px; }
     .map-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
@@ -39,18 +39,19 @@
     .btn-small { background:var(--card); border:1px solid var(--bdr); color:#fff; padding:7px 12px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; }
     .bottles-grid { position:relative; display:flex; flex-wrap:wrap; justify-content:center; gap:24px 18px; margin:38px 0 32px; min-height:260px; align-items:flex-end; }
     .bottle-wrap { position:relative; display:flex; flex-direction:column; align-items:center; }
-    .bottle { width:50px; height:156px; border:3px solid #c4b5fd; border-top:2px solid rgba(255,255,255,.4); border-radius:6px 6px 24px 24px; display:flex; flex-direction:column-reverse; overflow:hidden; cursor:pointer; transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .25s; background:rgba(255,255,255,.06); position:relative; z-index:2; }
+    .bottle { width:54px; height:164px; border:3px solid rgba(255,255,255,.55); border-top:4px solid #e9d5ff; border-radius:14px 14px 26px 26px; display:flex; flex-direction:column-reverse; overflow:hidden; cursor:pointer; transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .25s; background:linear-gradient(90deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.03) 40%,rgba(0,0,0,.25) 100%); box-shadow:inset 0 0 12px rgba(255,255,255,.15),0 10px 20px rgba(0,0,0,.45); position:relative; z-index:2; }
+    .bottle::after { content:''; position:absolute; top:6px; left:6px; width:6px; height:85%; background:linear-gradient(180deg,rgba(255,255,255,.45),transparent); border-radius:10px; pointer-events:none; }
     .bottle.selected { transform:translateY(-22px); border-color:var(--gold); box-shadow:0 12px 25px rgba(251,191,36,.5); z-index:10; }
     .bottle.pouring { z-index:25; transition:transform .35s ease-in-out; }
     .bottle.hint-glow { border-color:#10b981; box-shadow:0 0 22px #10b981; }
     .bottle.completed { border-color:var(--gold); box-shadow:0 0 22px rgba(251,191,36,.65); cursor:not-allowed; }
-    .liquid { width:100%; height:25%; border-top:1px solid rgba(255,255,255,.3); }
+    .liquid { width:100%; height:24%; border-top:2px solid rgba(255,255,255,.45); box-shadow:inset 0 -4px 8px rgba(0,0,0,.25); }
     .bottle-cap { position:absolute; top:-17px; width:34px; height:15px; background:linear-gradient(180deg,#fde047,#d97706); border:2px solid #fef08a; border-radius:6px 6px 2px 2px; z-index:5; animation:popCap .35s ease; }
     @keyframes popCap { 0%{transform:translateY(-20px) scale(.5);opacity:0} 100%{transform:translateY(0) scale(1);opacity:1} }
     .pour-stream { position:fixed; width:7px; border-radius:4px; z-index:20; pointer-events:none; }
     .sparkle { position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:30; animation:burst .8s ease-out forwards; }
     @keyframes burst { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
-    .boosters { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    boosters { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
     .booster-btn { background:var(--card); border:1px solid var(--purp); border-radius:14px; padding:10px 6px; color:#fff; text-align:center; cursor:pointer; font-weight:700; }
     .booster-btn span { display:block; font-size:11px; color:var(--gold); margin-top:3px; font-weight:800; }
     .card { background:var(--card); border:1px solid var(--bdr); border-radius:16px; padding:16px; margin-bottom:14px; }
@@ -98,7 +99,7 @@
       <div class="boosters">
         <button class="booster-btn" onclick="useUndo()">↩️ Undo<span id="lbl-undo">1 Ad</span></button>
         <button class="booster-btn" onclick="useHint()">💡 Hint<span id="lbl-hint">1 Ad</span></button>
-                <button class="booster-btn" onclick="useExtraBottle()">🧪 +1 Bottle<span>2 Ads</span></button>
+        <button class="booster-btn" onclick="useExtraBottle()">🧪 +1 Bottle<span>2 Ads</span></button>
       </div>
     </div>
     <div id="screen-shop" class="screen">
@@ -169,6 +170,7 @@
     function saveState() { localStorage.setItem('colorPaisaState', JSON.stringify(state)); updateUI(); }
 
     function showMonetagAd(adCount, onSuccess) {
+      if (adCount <= 0) return onSuccess();
       let watched = 0;
       function playNext() {
         if (typeof show_YOUR_ZONE_ID === 'function') {
@@ -237,8 +239,9 @@
         const curEl = document.getElementById('node-' + state.unlockedLevel);
         if (curEl) curEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
       }, 50);
-    }    
-      const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#fbbf24', '#a855f7', '#ec4899', '#06b6d4', '#f97316'];
+    }
+
+    const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#fbbf24', '#a855f7', '#ec4899', '#06b6d4', '#f97316'];
     let bottles = [], selectedBottle = null, moveHistory = [], currentPlayingLevel = 1, isAnimating = false;
     function isBottleCompleted(b) { return b.length === 4 && b.every(c => c === b); }
 
@@ -248,14 +251,18 @@
       const numColors = Math.min(8, 3 + Math.floor((lvl - 1) / 4));
       let pool = [];
       for (let c = 0; c < numColors; c++) for (let k = 0; k < 4; k++) pool.push(COLORS[c]);
-      pool.sort(() => Math.random() - 0.5);
-      bottles = [];
-      for (let b = 0; b < numColors; b++) bottles.push(pool.slice(b * 4, (b + 1) * 4));
+      do {
+        for (let i = pool.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [pool[i], pool[j]] = [pool[j], pool[i]];
+        }
+        bottles = [];
+        for (let b = 0; b < numColors; b++) bottles.push(pool.slice(b * 4, (b + 1) * 4));
+      } while (bottles.some(b => isBottleCompleted(b)));
       bottles.push([], []);
       switchTab('game'); renderBottles();
     }
-
-    function renderBottles(hintPair = []) {
+          function renderBottles(hintPair = []) {
       const area = document.getElementById('bottles-area');
       area.innerHTML = '';
       bottles.forEach((b, idx) => {
@@ -323,18 +330,23 @@
       if (selectedBottle === null) { if (bottles[idx].length > 0) { selectedBottle = idx; renderBottles(); } }
       else if (canPour(selectedBottle, idx)) animatePourAndExecute(selectedBottle, idx);
       else { selectedBottle = (selectedBottle === idx) ? null : idx; renderBottles(); }
-        }
-          function checkWin() {
+    }
+
+    function checkWin() {
       if (!bottles.every(b => b.length === 0 || isBottleCompleted(b))) return;
       setTimeout(() => {
-        state.gems += 50;
-        if (currentPlayingLevel === state.unlockedLevel) state.unlockedLevel++;
+        const earnedGems = currentPlayingLevel <= 5 ? 15 : 20;
+        state.gems += earnedGems;
+        const nextLvl = currentPlayingLevel + 1;
+        if (nextLvl > state.unlockedLevel) state.unlockedLevel = nextLvl;
         saveState();
         if (currentPlayingLevel % 50 === 0) {
-          openFomo('🏆 50-Level Loyalty Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>₹10.00 Loyalty Bonus</b>!', '🎬 Watch 2 Ads & Claim ₹10', 2, () => { state.wallet += 10.00; saveState(); alert('₹10.00 Loyalty Bonus Added!'); switchTab('map'); });
+          openFomo('🏆 50-Level Loyalty Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>₹10.00 Loyalty Bonus</b>!', '🎬 Watch 2 Ads & Claim ₹10', 2, () => { state.wallet += 10.00; saveState(); startLevel(nextLvl); });
         } else if (currentPlayingLevel % 5 === 0) {
-          openFomo('🎁 Jackpot Level Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>500 Bonus Gems (₹0.50)</b>!', '🎬 Watch 2 Ads & Claim 500 💎', 2, () => { state.gems += 500; saveState(); alert('+500 Gems Added!'); switchTab('map'); });
-        } else { alert(`🎉 Level ${currentPlayingLevel} Complete! +50 Gems Added!`); switchTab('map'); }
+          openFomo('🎁 Jackpot Level Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>500 Bonus Gems (₹0.50)</b>!', '🎬 Watch 2 Ads & Claim 500 💎', 2, () => { state.gems += 500; saveState(); startLevel(nextLvl); });
+        } else {
+          openFomo(`🎉 Level ${currentPlayingLevel} Complete!`, `You earned <b>+${earnedGems} Gems 💎</b>! Ready for next level?`, `Next Level (${nextLvl}) →`, 0, () => startLevel(nextLvl));
+        }
       }, 650);
     }
 
@@ -408,6 +420,3 @@
   </script>
 </body>
 </html>
-
-                         
-      
