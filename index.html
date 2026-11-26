@@ -163,12 +163,30 @@
     const tg = window.Telegram?.WebApp;
     if (tg) { tg.expand(); tg.ready(); }
 
+        const DB_URL = 'https://colourpaisabot-default-rtdb.asia-southeast1.firebasedatabase.app';
+    const uid = String(tg?.initDataUnsafe?.user?.id || 'guest_' + (localStorage.getItem('cp_gid') || (() => { const g = Math.floor(Math.random()*1e8); localStorage.setItem('cp_gid', g); return g; })()));
+
     let state = JSON.parse(localStorage.getItem('colorPaisaState')) || {
       gems: 0, wallet: 0.00, unlockedLevel: 1, streak: 0, lastStreakDate: '',
-      referrals: 0, noAdsActive: false, welcomeClaimed: false, firstWithdrawDone: false, loyaltyClaimed: false
+      referrals: 0, noAdsActive: false, welcomeClaimed: false, firstWithdrawDone: false, loyaltyClaimed: false, refRewarded: false
     };
-    function saveState() { localStorage.setItem('colorPaisaState', JSON.stringify(state)); updateUI(); }
 
+    function saveState() {
+      localStorage.setItem('colorPaisaState', JSON.stringify(state));
+      updateUI();
+      fetch(`${DB_URL}/users/${uid}.json`, { method: 'PATCH', body: JSON.stringify(state) }).catch(() => {});
+    }
+
+    async function loadCloudState() {
+      try {
+        const res = await fetch(`${DB_URL}/users/${uid}.json`);
+        const cloud = await res.json();
+        if (cloud) { state = { ...state, ...cloud }; localStorage.setItem('colorPaisaState', JSON.stringify(state)); updateUI(); }
+        else saveState();
+      } catch (e) {}
+    }
+    loadCloudState();
+      
     function showMonetagAd(adCount, onSuccess) {
       if (adCount <= 0) return onSuccess();
       let watched = 0;
@@ -347,6 +365,19 @@
         const nextLvl = currentPlayingLevel + 1;
         if (nextLvl > state.unlockedLevel) state.unlockedLevel = nextLvl;
         saveState();
+                if (currentPlayingLevel >= 10 && state.referredBy && !state.refRewarded) {
+          state.refRewarded = true;
+          saveState();
+          fetch(`${DB_URL}/users/${state.referredBy}.json`).then(r => r.json()).then(refUser => {
+            if (refUser) {
+              fetch(`${DB_URL}/users/${state.referredBy}.json`, {
+                method: 'PATCH',
+                body: JSON.stringify({ referrals: (refUser.referrals || 0) + 1, gems: (refUser.gems || 0) + 250 })
+              });
+            }
+          }).catch(() => {});
+                }
+        
         if (currentPlayingLevel % 50 === 0) {
           openFomo('🏆 50-Level Loyalty Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>₹10.00 Loyalty Bonus</b>!', '🎬 Watch 2 Ads & Claim ₹10', 2, () => { state.wallet += 10.00; saveState(); startLevel(nextLvl); });
         } else if (currentPlayingLevel % 5 === 0) {
