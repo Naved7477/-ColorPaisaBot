@@ -243,7 +243,7 @@
 
     const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#fbbf24', '#a855f7', '#ec4899', '#06b6d4', '#f97316'];
     let bottles = [], selectedBottle = null, moveHistory = [], currentPlayingLevel = 1, isAnimating = false;
-        function isBottleCompleted(b) { return b.length === 4 && b.every(c => c === b); }
+            function isBottleCompleted(b) { return b.length === 4 && new Set(b).size === 1; }
       
     function startLevel(lvl) {
       currentPlayingLevel = lvl; selectedBottle = null; moveHistory = []; isAnimating = false;
