@@ -184,18 +184,26 @@
     }
 
     let fomoInterval;
-    function openFomo(title, desc, btnText, adsNeeded, rewardCallback) {
+        function openFomo(title, desc, btnText, adsNeeded, rewardCallback, secText = 'No Thanks', secCallback = null, showTimer = true) {
       clearInterval(fomoInterval);
       let timeLeft = 10;
       document.getElementById('fomo-title').innerText = title;
       document.getElementById('fomo-desc').innerHTML = desc;
       document.getElementById('fomo-timer').innerText = timeLeft;
+      document.getElementById('fomo-timer').style.display = showTimer ? 'flex' : 'none';
       const btn = document.getElementById('fomo-action-btn');
       btn.innerText = btnText;
       btn.onclick = () => { clearInterval(fomoInterval); document.getElementById('fomo-modal').classList.remove('show'); showMonetagAd(adsNeeded, rewardCallback); };
+      const ghost = document.querySelector('#fomo-modal .btn-ghost');
+      ghost.innerText = secText;
+      ghost.style.display = 'block';
+      ghost.onclick = () => { closeFomo(); if (secCallback) secCallback(); };
       document.getElementById('fomo-modal').classList.add('show');
-      fomoInterval = setInterval(() => { timeLeft--; document.getElementById('fomo-timer').innerText = timeLeft; if (timeLeft <= 0) closeFomo(); }, 1000);
-    }
+      if (showTimer) {
+        fomoInterval = setInterval(() => { timeLeft--; document.getElementById('fomo-timer').innerText = timeLeft; if (timeLeft <= 0) closeFomo(); }, 1000);
+      }
+        }
+      
     function closeFomo() { clearInterval(fomoInterval); document.getElementById('fomo-modal').classList.remove('show'); }
 
     function switchTab(tab) {
@@ -343,9 +351,20 @@
           openFomo('🏆 50-Level Loyalty Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>₹10.00 Loyalty Bonus</b>!', '🎬 Watch 2 Ads & Claim ₹10', 2, () => { state.wallet += 10.00; saveState(); startLevel(nextLvl); });
         } else if (currentPlayingLevel % 5 === 0) {
           openFomo('🎁 Jackpot Level Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>500 Bonus Gems (₹0.50)</b>!', '🎬 Watch 2 Ads & Claim 500 💎', 2, () => { state.gems += 500; saveState(); startLevel(nextLvl); });
-        } else {
-          openFomo(`🎉 Level ${currentPlayingLevel} Complete!`, `You earned <b>+${earnedGems} Gems 💎</b>! Ready for next level?`, `Next Level (${nextLvl}) →`, 0, () => startLevel(nextLvl));
+              } else {
+          const forcedAd = state.noAdsActive ? 0 : 1;
+          openFomo(
+            `🎉 Level ${currentPlayingLevel} Complete!`,
+            `You earned <b>+${earnedGems} Gems 💎</b>!`,
+            `Next Level (${nextLvl}) →`,
+            forcedAd,
+            () => startLevel(nextLvl),
+            'Main Menu',
+            () => showMonetagAd(forcedAd, () => switchTab('map')),
+            false
+          );
         }
+        
       }, 650);
     }
 
