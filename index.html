@@ -171,9 +171,10 @@
       referrals: 0, noAdsActive: false, welcomeClaimed: false, firstWithdrawDone: false, loyaltyClaimed: false, refRewarded: false
     };
 
-    function saveState() {
+        function saveState() {
       localStorage.setItem('colorPaisaState', JSON.stringify(state));
       updateUI();
+      if (uid.startsWith('guest_') && state.unlockedLevel <= 1 && !state.welcomeClaimed && state.gems === 0) return;
       fetch(`${DB_URL}/users/${uid}.json`, { method: 'PATCH', body: JSON.stringify(state) }).catch(() => {});
     }
 
@@ -182,10 +183,11 @@
         const res = await fetch(`${DB_URL}/users/${uid}.json`);
         const cloud = await res.json();
         if (cloud) { state = { ...state, ...cloud }; localStorage.setItem('colorPaisaState', JSON.stringify(state)); updateUI(); }
-        else saveState();
+        else if (!uid.startsWith('guest_')) saveState();
       } catch (e) {}
     }
     loadCloudState();
+      
       
     function showMonetagAd(adCount, onSuccess) {
       if (adCount <= 0) return onSuccess();
