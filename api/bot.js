@@ -63,6 +63,12 @@ export default async function handler(req, res) {
         body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML' })
       });
     }
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: body.callback_query.id })
+    });
+    
   }
 
   return res.status(200).json({ ok: true });
