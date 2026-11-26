@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     const text = body.message.text || '';
 
     if (text.startsWith('/start')) {
-      const welcome = `🧪 <b>Welcome to Color Paisa!</b>\n\n💧 Sort colors, complete levels, and earn real rewards!\n💰 <b>1,000 Gems = ₹1.00</b> (Instant Cloud Save)\n\n👇 Tap <b>Play Game</b> below to start earning!\n\n🎮 <b>More Earning Games:</b>\n👉 https://t.me/TapToPaisa_Official_bot?start=${chatId}\n👉 https://t.me/BlockPaisa_bot?start=${chatId}`;
+            const welcome = `🧪 <b>Welcome to Color Paisa!</b>\n\n💧 Sort colors, complete levels, and earn real rewards!\n💰 <b>1,000 Gems = ₹1.00</b> (Instant Cloud Save)\n\n👇 Tap <b>Play Game</b> below to start earning!\n\n🎮 <b>More Earning Games:</b>\n👉 https://t.me/TapToPaisa_Official_bot?start=${chatId}\n👉 https://t.me/BlockPaisaGame_bot?start=${chatId}`;
 
       await fetch(tgApi, {
         method: 'POST',
@@ -44,6 +44,7 @@ export default async function handler(req, res) {
           }
         })
       });
+      
     }
   }
 
