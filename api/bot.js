@@ -22,54 +22,45 @@ export default async function handler(req, res) {
     const chatId = body.message.chat.id;
     const text = body.message.text || '';
 
+    const bottomMenu = {
+      keyboard: [
+        [{ text: '🎮 Play Game', web_app: { url: WEBAPP_URL } }],
+        [{ text: '📜 Transaction History' }, { text: '👥 Refer and Earn' }],
+        [{ text: '🎧 Customer Support' }]
+      ],
+      resize_keyboard: true,
+      is_persistent: true
+    };
+
     if (text.startsWith('/start')) {
-            const welcome = `🧪 <b>Welcome to Color Paisa!</b>\n\n💧 Sort colors, complete levels, and earn real rewards!\n💰 <b>1,000 Gems = ₹1.00</b> (Instant Cloud Save)\n\n👇 Tap <b>Play Game</b> below to start earning!\n\n🎮 <b>More Earning Games:</b>\n👉 https://t.me/TapToPaisa_Official_bot?start=${chatId}\n👉 https://t.me/BlockPaisaGame_bot?start=${chatId}`;
-
+      const welcome = `🧪 <b>Welcome to Color Paisa!</b>\n\n💧 Sort colors, complete levels, and earn real rewards!\n💰 <b>1,000 Gems = ₹1.00</b> (Instant Cloud Save)\n\n👇 Tap <b>Play Game</b> below to start earning!\n\n🎮 <b>More Earning Games:</b>\n👉 https://t.me/TapToPaisa_Official_bot?start=${chatId}\n👉 https://t.me/BlockPaisaGame_bot?start=${chatId}`;
       await fetch(tgApi, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: chatId,
-          text: welcome,
-          parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🎮 Play Game', web_app: { url: WEBAPP_URL } }],
-              [
-                { text: '📜 Transaction History', callback_data: 'history' },
-                { text: '👥 Refer and Earn', callback_data: 'refer' }
-              ],
-              [{ text: '🎧 Customer Support', url: 'https://t.me/ColorPaisaBot' }]
-            ]
-          }
-        })
+        body: JSON.stringify({ chat_id: chatId, text: welcome, parse_mode: 'HTML', reply_markup: bottomMenu })
       });
-      
-    }
-  }
-
-  if (body.callback_query) {
-    const chatId = body.callback_query.message.chat.id;
-    const data = body.callback_query.data;
-    let reply = '';
-    if (data === 'refer') {
-      reply = `👥 <b>Refer & Earn!</b>\n\nShare your link with friends. When 1 friend joins & reaches Level 10, your ₹10 withdrawal unlocks!\n\n🔗 <b>Your Link:</b>\n<code>https://t.me/ColorPaisaBot?start=ref_${chatId}</code>`;
-    } else if (data === 'history') {
-      reply = `📜 <b>Transaction History</b>\n\nOpen the game and check the <b>Wallet</b> tab to view your Gems, Withdrawal status & Loyalty Bonus!`;
-    }
-    if (reply) {
+    } else if (text === '👥 Refer and Earn') {
+      const reply = `👥 <b>Refer & Earn!</b>\n\nShare your link with friends. When 1 friend joins & reaches Level 10, your ₹10 withdrawal unlocks!\n\n🔗 <b>Your Link:</b>\n<code>https://t.me/ColorPaisaBot?start=ref_${chatId}</code>`;
       await fetch(tgApi, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML' })
+        body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML', reply_markup: bottomMenu })
+      });
+    } else if (text === '📜 Transaction History') {
+      const reply = `📜 <b>Transaction History</b>\n\nOpen <b>Play Game</b> and check the <b>Wallet</b> tab to view your Gems, Withdrawal status & Loyalty Bonus!`;
+      await fetch(tgApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML', reply_markup: bottomMenu })
+      });
+    } else if (text === '🎧 Customer Support') {
+      const reply = `🎧 <b>Customer Support</b>\n\nNeed help with payouts or referrals? Message us at @ColorPaisaBot or check your Wallet tab inside the game!`;
+      await fetch(tgApi, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML', reply_markup: bottomMenu })
       });
     }
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callback_query_id: body.callback_query.id })
-    });
-    
   }
 
   return res.status(200).json({ ok: true });
