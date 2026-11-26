@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Color Paisa - Sort & Earn</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src='//niphaumeenses.net/vignette.min.js' data-zone='YOUR_ZONE_ID' data-sdk='show_YOUR_ZONE_ID'></script>
+  <style>
+    :root { --bg:#120826; --card:#1e103b; --bdr:#4c2889; --purp:#9d4edd; --gold:#fbbf24; --gdark:#d97706; --grn:#65d315; --grnd:#3f9106; }
+    * { box-sizing:border-box; margin:0; padding:0; font-family:sans-serif; -webkit-tap-highlight-color:transparent; }
+    body { background:radial-gradient(circle at top,#240e4a,var(--bg)); color:#fff; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+    .header { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:rgba(18,8,38,.95); border-bottom:1px solid var(--bdr); z-index:15; }
+    .brand { font-weight:900; font-size:16px; color:var(--gold); }
+    .balances { display:flex; gap:8px; }
+    .pill { background:var(--card); border:1px solid var(--bdr); padding:5px 10px; border-radius:20px; font-size:13px; font-weight:800; }
+    .pill.wallet { border-color:#10b981; color:#34d399; }
+    .pill.gems { border-color:#38bdf8; color:#7dd3fc; }
+    .main { flex:1; overflow-y:auto; padding:14px 14px 145px; scroll-behavior:smooth; }
+    .screen { display:none; }
+    .screen.active { display:block; }
+    .streak-card { background:linear-gradient(135deg,#2b1554,#1a0d36); border:1px solid var(--gdark); border-radius:16px; padding:12px; margin-bottom:14px; }
+    .streak-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .streak-days { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+    .day-box { background:#120826; border:1px solid var(--bdr); border-radius:8px; padding:6px 2px; text-align:center; font-size:10px; }
+    .day-box.done { background:rgba(251,191,36,.22); border-color:var(--gold); color:var(--gold); font-weight:800; }
+    .map-wrapper { position:relative; display:flex; flex-direction:column-reverse; align-items:center; gap:28px; padding:20px 0 40px; }
+    .map-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:1; }
+    .level-row { width:100%; display:flex; justify-content:center; z-index:2; }
+    .lvl-tile { width:68px; height:68px; border-radius:20px; background:linear-gradient(180deg,#5b2ca8,#3b1775); border:3px solid #7c4dff; box-shadow:0 7px 0 #230b4a; display:flex; flex-direction:column; align-items:center; justify-content:center; font-weight:900; font-size:22px; color:#b39ddb; cursor:pointer; position:relative; }
+    .lvl-tile.done { background:linear-gradient(180deg,#8e24aa,#5e1475); border-color:#d500f9; color:#f3e5f5; box-shadow:0 7px 0 #380747; }
+    .lvl-tile.current { background:linear-gradient(180deg,#d500f9,#8e24aa); border:4px solid #ffca28; color:#fff; transform:scale(1.12); box-shadow:0 7px 0 #b26a00,0 0 25px rgba(255,202,40,.85); }
+    .lvl-tile.locked { opacity:.65; cursor:not-allowed; }
+    .badge-tag { position:absolute; top:-12px; background:#ef4444; color:#fff; font-size:9px; padding:2px 7px; border-radius:10px; font-weight:800; white-space:nowrap; }
+    .badge-tag.gold { background:var(--gold); color:#000; }
+    .play-dock { position:fixed; bottom:62px; left:0; width:100%; padding:10px 24px; background:linear-gradient(to top,rgba(18,8,38,.98) 60%,transparent); z-index:18; display:flex; justify-content:center; }
+    .btn-candy-play { width:100%; max-width:300px; background:linear-gradient(180deg,#84eb1e,var(--grn)); border:3px solid #d9ff9e; border-radius:30px; padding:13px; color:#fff; font-size:22px; font-weight:900; text-shadow:0 2px 3px rgba(0,0,0,.4); box-shadow:0 6px 0 var(--grnd); cursor:pointer; }
+    .game-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .btn-small { background:var(--card); border:1px solid var(--bdr); color:#fff; padding:7px 12px; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; }
+    .bottles-grid { position:relative; display:flex; flex-wrap:wrap; justify-content:center; gap:24px 18px; margin:38px 0 32px; min-height:260px; align-items:flex-end; }
+    .bottle-wrap { position:relative; display:flex; flex-direction:column; align-items:center; }
+    .bottle { width:50px; height:156px; border:3px solid #c4b5fd; border-top:2px solid rgba(255,255,255,.4); border-radius:6px 6px 24px 24px; display:flex; flex-direction:column-reverse; overflow:hidden; cursor:pointer; transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .25s; background:rgba(255,255,255,.06); position:relative; z-index:2; }
+    .bottle.selected { transform:translateY(-22px); border-color:var(--gold); box-shadow:0 12px 25px rgba(251,191,36,.5); z-index:10; }
+    .bottle.pouring { z-index:25; transition:transform .35s ease-in-out; }
+    .bottle.hint-glow { border-color:#10b981; box-shadow:0 0 22px #10b981; }
+    .bottle.completed { border-color:var(--gold); box-shadow:0 0 22px rgba(251,191,36,.65); cursor:not-allowed; }
+    .liquid { width:100%; height:25%; border-top:1px solid rgba(255,255,255,.3); }
+    .bottle-cap { position:absolute; top:-17px; width:34px; height:15px; background:linear-gradient(180deg,#fde047,#d97706); border:2px solid #fef08a; border-radius:6px 6px 2px 2px; z-index:5; animation:popCap .35s ease; }
+    @keyframes popCap { 0%{transform:translateY(-20px) scale(.5);opacity:0} 100%{transform:translateY(0) scale(1);opacity:1} }
+    .pour-stream { position:fixed; width:7px; border-radius:4px; z-index:20; pointer-events:none; }
+    .sparkle { position:fixed; width:8px; height:8px; border-radius:50%; pointer-events:none; z-index:30; animation:burst .8s ease-out forwards; }
+    @keyframes burst { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0} }
+    .boosters { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .booster-btn { background:var(--card); border:1px solid var(--purp); border-radius:14px; padding:10px 6px; color:#fff; text-align:center; cursor:pointer; font-weight:700; }
+    .booster-btn span { display:block; font-size:11px; color:var(--gold); margin-top:3px; font-weight:800; }
+    .card { background:var(--card); border:1px solid var(--bdr); border-radius:16px; padding:16px; margin-bottom:14px; }
+    .card h3 { font-size:16px; margin-bottom:6px; color:var(--gold); }
+    .card p { font-size:13px; color:#d8b4fe; line-height:1.4; margin-bottom:12px; }
+    .btn-primary { width:100%; background:linear-gradient(90deg,#10b981,#059669); border:none; color:#fff; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; }
+    .btn-gold { width:100%; background:linear-gradient(90deg,#fbbf24,#d97706); border:none; color:#1a1233; padding:12px; border-radius:12px; font-weight:800; font-size:14px; cursor:pointer; }
+    .btn-ghost { width:100%; background:transparent; border:none; color:#9ca3af; padding:10px; font-size:13px; cursor:pointer; margin-top:6px; }
+    input,select { width:100%; background:#120826; border:1px solid var(--bdr); color:#fff; padding:11px; border-radius:10px; margin-bottom:10px; font-size:14px; }
+    .nav { position:fixed; bottom:0; width:100%; background:#160a2e; border-top:1px solid var(--bdr); display:grid; grid-template-columns:repeat(3,1fr); padding:8px 0; z-index:20; }
+    .nav-btn { background:none; border:none; color:#a78bfa; font-size:12px; font-weight:800; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; }
+    .nav-btn.active { color:var(--gold); }
+    .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; padding:20px; z-index:50; }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:linear-gradient(180deg,#26184d,#160e2e); border:2px solid var(--gold); border-radius:20px; padding:22px; width:100%; max-width:340px; text-align:center; }
+    .timer-ring { width:54px; height:54px; border-radius:50%; border:3px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:900; color:var(--gold); margin:0 auto 12px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">🧪 COLOR PAISA</div>
+    <div class="balances">
+      <div class="pill gems">💎 <span id="ui-gems">0</span></div>
+      <div class="pill wallet">₹<span id="ui-wallet">0.00</span></div>
+    </div>
+  </div>
+  <div class="main" id="main-scroll">
+    <div id="screen-map" class="screen active">
+      <div class="streak-card">
+        <div class="streak-top">
+          <strong style="font-size:13px; color:var(--gold);">🔥 7-Day Streak (<span id="ui-streak">0</span>/7)</strong>
+          <button class="btn-small" style="background:var(--gold); color:#000; border:none;" onclick="claimDailyStreak()">+300 💎 (1 Ad)</button>
+        </div>
+        <div class="streak-days" id="streak-grid"></div>
+      </div>
+      <div class="map-wrapper" id="level-map"><svg class="map-svg" id="map-road-svg"></svg></div>
+    </div>
+    <div id="screen-game" class="screen">
+      <div class="game-top">
+        <button class="btn-small" onclick="switchTab('map')">← Map</button>
+        <strong style="color:var(--gold); font-size:16px;">Level <span id="ui-cur-lvl">1</span></strong>
+        <button class="btn-small" onclick="startLevel(currentPlayingLevel)">↻ Restart</button>
+      </div>
+      <div class="bottles-grid" id="bottles-area"></div>
+      <div class="boosters">
+        <button class="booster-btn" onclick="useUndo()">↩️ Undo<span id="lbl-undo">1 Ad</span></button>
+        <button class="booster-btn" onclick="useHint()">💡 Hint<span id="lbl-hint">1 Ad</span></button>
+                <button class="booster-btn" onclick="useExtraBottle()">🧪 +1 Bottle<span>2 Ads</span></button>
+      </div>
+    </div>
+    <div id="screen-shop" class="screen">
+      <div class="card">
+        <h3>🚫 No Forced Ads (3 Days)</h3>
+        <p>Removes level-end forced ads & makes <b>Undo & Hint FREE</b>. Optional 10-sec FOMO reward popups stay active!</p>
+        <button class="btn-gold" onclick="buyNoAds(15, 3)">Buy with Game Wallet — ₹15.00</button>
+      </div>
+      <div class="card">
+        <h3>👑 VIP No Forced Ads (7 Days)</h3>
+        <p>7 days of smooth ad-free gameplay + <b>Unlimited Free Hints & Undo</b> using your earned wallet balance.</p>
+        <button class="btn-gold" onclick="buyNoAds(29, 7)">Buy with Game Wallet — ₹29.00</button>
+      </div>
+      <div class="card" id="no-ads-status" style="display:none; border-color:#10b981;">
+        <h3 style="color:#34d399;">✅ No-Ads Pass Active!</h3>
+        <p style="margin:0;">Forced ads are disabled & Undo/Hint are 100% FREE.</p>
+      </div>
+    </div>
+    <div id="screen-wallet" class="screen">
+      <div class="card">
+        <h3>💎 Convert Gems to Real Cash</h3>
+        <p>Rate: <b>1,000 Gems = ₹1.00</b> (+10% Instant Conversion Bonus!). Convert any amount anytime.</p>
+        <button class="btn-primary" onclick="convertGems()">Watch 1 Ad & Convert (<span id="conv-preview">₹0.00</span>)</button>
+      </div>
+      <div class="card" id="loyalty-card" style="display:none; border-color:var(--gold);">
+        <h3>🎁 Post-Payout Loyalty Bonus!</h3>
+        <p>Congrats on your withdrawal! Watch 2 ads to claim your <b>₹2.00 Loyalty Cashback</b>.</p>
+        <button class="btn-gold" onclick="claimPostPayoutLoyalty()">Watch 2 Ads & Claim ₹2.00</button>
+      </div>
+      <div class="card">
+        <h3>💸 Withdraw Earnings</h3>
+        <p id="ref-status">🔒 <b>1 Active Referral</b> required for First Withdrawal (₹10 Min). Next withdrawals: ₹30 Min.</p>
+        <button class="btn-small" style="width:100%; margin-bottom:12px; border-color:var(--gold);" onclick="inviteFriend()">👥 Invite Friend on Telegram (<span id="ui-refs">0</span>/1)</button>
+        <select id="payout-method">
+          <option value="UPI">UPI Transfer (GPay / PhonePe / Paytm)</option>
+          <option value="REDEEM">Google Play Redeem Code</option>
+        </select>
+        <input type="text" id="payout-id" placeholder="Enter UPI ID (e.g. name@upi) or Email" />
+        <button class="btn-primary" onclick="requestWithdraw()">Withdraw Now (Min ₹<span id="min-wd">10</span>)</button>
+      </div>
+    </div>
+  </div>
+  <div class="play-dock" id="play-dock">
+    <button class="btn-candy-play" onclick="startLevel(state.unlockedLevel)">Play Level <span id="btn-play-lvl">1</span></button>
+  </div>
+  <div class="nav">
+    <button class="nav-btn" id="nav-shop" onclick="switchTab('shop')">🛍️<span>Shop</span></button>
+    <button class="nav-btn active" id="nav-map" onclick="switchTab('map')">📍<span>Map</span></button>
+    <button class="nav-btn" id="nav-wallet" onclick="switchTab('wallet')">👛<span>Wallet</span></button>
+  </div>
+  <div class="modal-overlay" id="fomo-modal">
+    <div class="modal-box">
+      <div class="timer-ring" id="fomo-timer">10</div>
+      <h2 id="fomo-title" style="color:var(--gold); font-size:20px; margin-bottom:8px;">Welcome Bonus!</h2>
+      <p id="fomo-desc" style="font-size:14px; color:#e9d5ff; margin-bottom:16px;">Watch 1 short ad to claim <b>₹5.00</b> into your wallet!</p>
+      <button class="btn-gold" id="fomo-action-btn">🎬 Watch Ad & Claim Now</button>
+      <button class="btn-ghost" onclick="closeFomo()">No Thanks</button>
+    </div>
+  </div>
+    <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.expand(); tg.ready(); }
+
+    let state = JSON.parse(localStorage.getItem('colorPaisaState')) || {
+      gems: 0, wallet: 0.00, unlockedLevel: 1, streak: 0, lastStreakDate: '',
+      referrals: 0, noAdsActive: false, welcomeClaimed: false, firstWithdrawDone: false, loyaltyClaimed: false
+    };
+    function saveState() { localStorage.setItem('colorPaisaState', JSON.stringify(state)); updateUI(); }
+
+    function showMonetagAd(adCount, onSuccess) {
+      let watched = 0;
+      function playNext() {
+        if (typeof show_YOUR_ZONE_ID === 'function') {
+          show_YOUR_ZONE_ID().then(() => { watched++; if (watched < adCount) playNext(); else onSuccess(); }).catch(() => alert('Ad failed to load.'));
+        } else {
+          alert(`Simulated Monetag Ad (${watched + 1}/${adCount}) Completed!`);
+          watched++; if (watched < adCount) playNext(); else onSuccess();
+        }
+      }
+      playNext();
+    }
+
+    let fomoInterval;
+    function openFomo(title, desc, btnText, adsNeeded, rewardCallback) {
+      clearInterval(fomoInterval);
+      let timeLeft = 10;
+      document.getElementById('fomo-title').innerText = title;
+      document.getElementById('fomo-desc').innerHTML = desc;
+      document.getElementById('fomo-timer').innerText = timeLeft;
+      const btn = document.getElementById('fomo-action-btn');
+      btn.innerText = btnText;
+      btn.onclick = () => { clearInterval(fomoInterval); document.getElementById('fomo-modal').classList.remove('show'); showMonetagAd(adsNeeded, rewardCallback); };
+      document.getElementById('fomo-modal').classList.add('show');
+      fomoInterval = setInterval(() => { timeLeft--; document.getElementById('fomo-timer').innerText = timeLeft; if (timeLeft <= 0) closeFomo(); }, 1000);
+    }
+    function closeFomo() { clearInterval(fomoInterval); document.getElementById('fomo-modal').classList.remove('show'); }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('screen-' + tab).classList.add('active');
+      if (document.getElementById('nav-' + tab)) document.getElementById('nav-' + tab).classList.add('active');
+      document.getElementById('play-dock').style.display = (tab === 'map') ? 'flex' : 'none';
+      updateUI();
+    }
+
+    function renderMap() {
+      const map = document.getElementById('level-map');
+      map.innerHTML = '<svg class="map-svg" id="map-road-svg"></svg>';
+      const maxShow = Math.max(15, state.unlockedLevel + 7);
+      const offsets = [0, 55, 0, -55];
+      for (let i = 1; i <= maxShow; i++) {
+        const row = document.createElement('div');
+        row.className = 'level-row';
+        row.style.transform = `translateX(${offsets[(i - 1) % 4]}px)`;
+        const tile = document.createElement('div');
+        tile.className = 'lvl-tile ' + (i < state.unlockedLevel ? 'done' : i === state.unlockedLevel ? 'current' : 'locked');
+        tile.id = 'node-' + i;
+        tile.innerHTML = (i < state.unlockedLevel) ? '✔' : i;
+        if (i % 50 === 0) tile.innerHTML += `<span class="badge-tag gold">₹10 BONUS</span>`;
+        else if (i % 5 === 0) tile.innerHTML += `<span class="badge-tag">500 💎</span>`;
+        if (i <= state.unlockedLevel) tile.onclick = () => startLevel(i);
+        row.appendChild(tile);
+        map.appendChild(row);
+      }
+      setTimeout(() => {
+        const svg = document.getElementById('map-road-svg'), mapRect = map.getBoundingClientRect();
+        let pathD = '';
+        for (let i = 1; i <= maxShow; i++) {
+          const el = document.getElementById('node-' + i);
+          if (!el) continue;
+          const r = el.getBoundingClientRect();
+          pathD += (i === 1 ? 'M ' : ' L ') + (r.left - mapRect.left + r.width / 2) + ' ' + (r.top - mapRect.top + r.height / 2);
+        }
+        svg.innerHTML = `<path d="${pathD}" fill="none" stroke="#6a1b9a" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" opacity="0.75"/>`;
+        const curEl = document.getElementById('node-' + state.unlockedLevel);
+        if (curEl) curEl.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }, 50);
+    }    
+      const COLORS = ['#ef4444', '#3b82f6', '#10b981', '#fbbf24', '#a855f7', '#ec4899', '#06b6d4', '#f97316'];
+    let bottles = [], selectedBottle = null, moveHistory = [], currentPlayingLevel = 1, isAnimating = false;
+    function isBottleCompleted(b) { return b.length === 4 && b.every(c => c === b); }
+
+    function startLevel(lvl) {
+      currentPlayingLevel = lvl; selectedBottle = null; moveHistory = []; isAnimating = false;
+      document.getElementById('ui-cur-lvl').innerText = lvl;
+      const numColors = Math.min(8, 3 + Math.floor((lvl - 1) / 4));
+      let pool = [];
+      for (let c = 0; c < numColors; c++) for (let k = 0; k < 4; k++) pool.push(COLORS[c]);
+      pool.sort(() => Math.random() - 0.5);
+      bottles = [];
+      for (let b = 0; b < numColors; b++) bottles.push(pool.slice(b * 4, (b + 1) * 4));
+      bottles.push([], []);
+      switchTab('game'); renderBottles();
+    }
+
+    function renderBottles(hintPair = []) {
+      const area = document.getElementById('bottles-area');
+      area.innerHTML = '';
+      bottles.forEach((b, idx) => {
+        const completed = isBottleCompleted(b);
+        const wrap = document.createElement('div');
+        wrap.className = 'bottle-wrap';
+        if (completed) { const cap = document.createElement('div'); cap.className = 'bottle-cap'; wrap.appendChild(cap); }
+        const div = document.createElement('div');
+        div.id = 'bottle-el-' + idx;
+        div.className = 'bottle' + (selectedBottle === idx ? ' selected' : '') + (hintPair.includes(idx) ? ' hint-glow' : '') + (completed ? ' completed' : '');
+        div.onclick = () => onBottleClick(idx);
+        b.forEach(color => { const liq = document.createElement('div'); liq.className = 'liquid'; liq.style.background = color; div.appendChild(liq); });
+        wrap.appendChild(div); area.appendChild(wrap);
+      });
+    }
+
+    function canPour(from, to) {
+      if (from === to || isBottleCompleted(bottles[from]) || isBottleCompleted(bottles[to])) return false;
+      if (bottles[from].length === 0 || bottles[to].length >= 4) return false;
+      return bottles[to].length === 0 || bottles[from][bottles[from].length - 1] === bottles[to][bottles[to].length - 1];
+    }
+
+    function spawnSprinkles(bottleIdx) {
+      const el = document.getElementById('bottle-el-' + bottleIdx);
+      if (!el) return;
+      const rect = el.getBoundingClientRect(), cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      const sparkColors = ['#fbbf24', '#fde047', '#ffffff', '#34d399', '#f472b6'];
+      for (let i = 0; i < 24; i++) {
+        const sp = document.createElement('div');
+        sp.className = 'sparkle'; sp.style.left = cx + 'px'; sp.style.top = cy + 'px'; sp.style.background = sparkColors[i % sparkColors.length];
+        const angle = (Math.PI * 2 * i) / 24, dist = 45 + Math.random() * 55;
+        sp.style.setProperty('--dx', Math.cos(angle) * dist + 'px'); sp.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+        document.body.appendChild(sp); setTimeout(() => sp.remove(), 850);
+      }
+    }
+
+    function animatePourAndExecute(fromIdx, toIdx) {
+      isAnimating = true;
+      const fromEl = document.getElementById('bottle-el-' + fromIdx), toEl = document.getElementById('bottle-el-' + toIdx);
+      const color = bottles[fromIdx][bottles[fromIdx].length - 1];
+      const fRect = fromEl.getBoundingClientRect(), tRect = toEl.getBoundingClientRect();
+      const pourFromLeft = fRect.left < tRect.left;
+      fromEl.classList.remove('selected'); fromEl.classList.add('pouring');
+      fromEl.style.transform = `translate(${(tRect.left + (pourFromLeft ? -28 : 28)) - fRect.left}px, ${(tRect.top - 48) - fRect.top}px) rotate(${pourFromLeft ? 58 : -58}deg)`;
+
+      setTimeout(() => {
+        const stream = document.createElement('div');
+        stream.className = 'pour-stream'; stream.style.background = color;
+        stream.style.left = (tRect.left + tRect.width / 2 - 3) + 'px'; stream.style.top = (tRect.top - 18) + 'px'; stream.style.height = (tRect.height - 15) + 'px';
+        document.body.appendChild(stream);
+
+        setTimeout(() => {
+          stream.remove(); fromEl.style.transform = ''; fromEl.classList.remove('pouring');
+          moveHistory.push(JSON.parse(JSON.stringify(bottles)));
+          while (canPour(fromIdx, toIdx) && bottles[fromIdx][bottles[fromIdx].length - 1] === color) bottles[toIdx].push(bottles[fromIdx].pop());
+          selectedBottle = null; isAnimating = false; renderBottles();
+          if (isBottleCompleted(bottles[toIdx])) spawnSprinkles(toIdx);
+          checkWin();
+        }, 320);
+      }, 260);
+    }
+
+    function onBottleClick(idx) {
+      if (isAnimating || isBottleCompleted(bottles[idx])) return;
+      if (selectedBottle === null) { if (bottles[idx].length > 0) { selectedBottle = idx; renderBottles(); } }
+      else if (canPour(selectedBottle, idx)) animatePourAndExecute(selectedBottle, idx);
+      else { selectedBottle = (selectedBottle === idx) ? null : idx; renderBottles(); }
+        }
+          function checkWin() {
+      if (!bottles.every(b => b.length === 0 || isBottleCompleted(b))) return;
+      setTimeout(() => {
+        state.gems += 50;
+        if (currentPlayingLevel === state.unlockedLevel) state.unlockedLevel++;
+        saveState();
+        if (currentPlayingLevel % 50 === 0) {
+          openFomo('🏆 50-Level Loyalty Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>₹10.00 Loyalty Bonus</b>!', '🎬 Watch 2 Ads & Claim ₹10', 2, () => { state.wallet += 10.00; saveState(); alert('₹10.00 Loyalty Bonus Added!'); switchTab('map'); });
+        } else if (currentPlayingLevel % 5 === 0) {
+          openFomo('🎁 Jackpot Level Bonus!', 'Watch <b>2 Ads</b> within 10s to claim <b>500 Bonus Gems (₹0.50)</b>!', '🎬 Watch 2 Ads & Claim 500 💎', 2, () => { state.gems += 500; saveState(); alert('+500 Gems Added!'); switchTab('map'); });
+        } else { alert(`🎉 Level ${currentPlayingLevel} Complete! +50 Gems Added!`); switchTab('map'); }
+      }, 650);
+    }
+
+    function useUndo() {
+      if (isAnimating || moveHistory.length === 0) return alert('Nothing to undo!');
+      const apply = () => { bottles = moveHistory.pop(); selectedBottle = null; renderBottles(); };
+      state.noAdsActive ? apply() : showMonetagAd(1, apply);
+    }
+    function useHint() {
+      if (isAnimating) return;
+      const findMove = () => {
+        for (let i = 0; i < bottles.length; i++) for (let j = 0; j < bottles.length; j++) if (canPour(i, j)) { renderBottles([i, j]); return; }
+        alert('No moves left! Use +1 Bottle.');
+      };
+      state.noAdsActive ? findMove() : showMonetagAd(1, findMove);
+    }
+    function useExtraBottle() { if (!isAnimating) showMonetagAd(2, () => { bottles.push([]); renderBottles(); }); }
+    function claimDailyStreak() {
+      const today = new Date().toDateString();
+      if (state.lastStreakDate === today) return alert('Already claimed today! Come back tomorrow.');
+      showMonetagAd(1, () => { state.streak = (state.streak % 7) + 1; state.lastStreakDate = today; state.gems += 300; saveState(); alert('🔥 Streak Updated! +300 Gems Added!'); });
+    }
+    function buyNoAds(cost, days) {
+      if (state.wallet < cost) return alert(`Insufficient Wallet Balance! You need ₹${cost}.00.`);
+      state.wallet -= cost; state.noAdsActive = true; saveState(); alert(`✅ ${days}-Day No Forced Ads Pass Activated!`);
+    }
+    function convertGems() {
+      if (state.gems <= 0) return alert('Play levels to earn Gems first!');
+      showMonetagAd(1, () => { const inr = (state.gems / 1000) * 1.10; state.wallet += inr; state.gems = 0; saveState(); alert(`💰 Converted! ₹${inr.toFixed(3)} added to your Wallet!`); });
+    }
+    function inviteFriend() {
+      const botLink = 'https://t.me/ColorPaisaBot?start=ref123';
+      if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent('Play Color Paisa & Earn Real Cash!')}`);
+      state.referrals++; saveState();
+    }
+    function requestWithdraw() {
+      const minAmt = state.firstWithdrawDone ? 30 : 10, id = document.getElementById('payout-id').value.trim();
+      if (!state.firstWithdrawDone && state.referrals < 1) return alert('Invite at least 1 friend to unlock your first ₹10 withdrawal!');
+      if (state.wallet < minAmt) return alert(`Minimum withdrawal is ₹${minAmt}.00!`);
+      if (!id) return alert('Please enter your UPI ID or Email!');
+      state.wallet -= minAmt; state.firstWithdrawDone = true; saveState();
+      alert(`✅ Withdrawal Request of ₹${minAmt}.00 Submitted! Unlock your ₹2 Loyalty Cashback below.`);
+    }
+    function claimPostPayoutLoyalty() {
+      showMonetagAd(2, () => { state.wallet += 2.00; state.loyaltyClaimed = true; saveState(); alert('🎁 ₹2.00 Post-Payout Loyalty Bonus Credited!'); });
+    }
+    function updateUI() {
+      document.getElementById('ui-gems').innerText = state.gems;
+      document.getElementById('ui-wallet').innerText = state.wallet.toFixed(2);
+      document.getElementById('ui-streak').innerText = state.streak;
+      document.getElementById('ui-refs').innerText = state.referrals;
+      document.getElementById('btn-play-lvl').innerText = state.unlockedLevel;
+      document.getElementById('min-wd').innerText = state.firstWithdrawDone ? '30' : '10';
+      document.getElementById('conv-preview').innerText = '₹' + ((state.gems / 1000) * 1.10).toFixed(3);
+      document.getElementById('lbl-undo').innerText = state.noAdsActive ? 'FREE' : '1 Ad';
+      document.getElementById('lbl-hint').innerText = state.noAdsActive ? 'FREE' : '1 Ad';
+      document.getElementById('no-ads-status').style.display = state.noAdsActive ? 'block' : 'none';
+      document.getElementById('loyalty-card').style.display = (state.firstWithdrawDone && !state.loyaltyClaimed) ? 'block' : 'none';
+      const sGrid = document.getElementById('streak-grid'); sGrid.innerHTML = '';
+      for (let d = 1; d <= 7; d++) sGrid.innerHTML += `<div class="day-box ${d <= state.streak ? 'done' : ''}">D${d}<br>${d === 7 ? '1K💎' : '300'}</div>`;
+      renderMap();
+    }
+    updateUI();
+    if (!state.welcomeClaimed) {
+      setTimeout(() => {
+        openFomo('🎉 Welcome Bonus!', 'Watch <b>1 Short Ad</b> within 10s to claim <b>₹5.00 Welcome Bonus</b>!', '🎬 Watch 1 Ad & Claim ₹5', 1, () => {
+          state.wallet += 5.00; state.welcomeClaimed = true; saveState(); alert('🎉 ₹5.00 Welcome Bonus Added!');
+        });
+      }, 600);
+    }
+  </script>
+</body>
+</html>
+
+                         
+      
