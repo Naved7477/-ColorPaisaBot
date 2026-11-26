@@ -400,15 +400,24 @@
       if (tg) tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(botLink)}&text=${encodeURIComponent('Play Color Paisa & Earn Real Cash!')}`);
       state.referrals++; saveState();
     }
-    function requestWithdraw() {
+        function requestWithdraw() {
       const minAmt = state.firstWithdrawDone ? 30 : 10, id = document.getElementById('payout-id').value.trim();
+      const method = document.getElementById('payout-method').value;
       if (!state.firstWithdrawDone && state.referrals < 1) return alert('Invite at least 1 friend to unlock your first ₹10 withdrawal!');
       if (state.wallet < minAmt) return alert(`Minimum withdrawal is ₹${minAmt}.00!`);
       if (!id) return alert('Please enter your UPI ID or Email!');
+
+      const user = tg?.initDataUnsafe?.user || { id: 'Guest', first_name: 'Player' };
+      fetch('/api/bot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'withdraw', userId: user.id, name: user.first_name, amount: minAmt, method: method, payoutId: id })
+      });
+
       state.wallet -= minAmt; state.firstWithdrawDone = true; saveState();
       alert(`✅ Withdrawal Request of ₹${minAmt}.00 Submitted! Unlock your ₹2 Loyalty Cashback below.`);
-    }
-    function claimPostPayoutLoyalty() {
+        }
+          function claimPostPayoutLoyalty() {
       showMonetagAd(2, () => { state.wallet += 2.00; state.loyaltyClaimed = true; saveState(); alert('🎁 ₹2.00 Post-Payout Loyalty Bonus Credited!'); });
     }
     function updateUI() {
