@@ -8,24 +8,22 @@ export default async function handler(req, res) {
 
   const body = req.body || {};
 
-  // 1. Withdrawal Notification from Game to Admin Phone
   if (body.type === 'withdraw') {
-    const msg = `💸 *NEW WITHDRAWAL REQUEST!*\n\n👤 *User ID:* \`${body.userId}\`\n📛 *Name:* ${body.name}\n💰 *Amount:* ₹${body.amount}\n🏦 *Method:* ${body.method}\n🆔 *Details:* \`${body.payoutId}\``;
+    const msg = `💸 <b>NEW WITHDRAWAL REQUEST!</b>\n\n👤 <b>User ID:</b> <code>${body.userId}</code>\n📛 <b>Name:</b> ${body.name}\n💰 <b>Amount:</b> ₹${body.amount}\n🏦 <b>Method:</b> ${body.method}\n🆔 <b>Details:</b> <code>${body.payoutId}</code>`;
     await fetch(tgApi, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: 'Markdown' })
+      body: JSON.stringify({ chat_id: ADMIN_ID, text: msg, parse_mode: 'HTML' })
     });
     return res.status(200).json({ ok: true });
   }
 
-  // 2. Telegram Bot Webhook (/start & Menu Buttons)
   if (body.message) {
     const chatId = body.message.chat.id;
     const text = body.message.text || '';
 
     if (text.startsWith('/start')) {
-      const welcome = `🧪 *Welcome to Color Paisa!*\n\n💧 Sort colors, complete levels, and earn real rewards!\n💰 *1,000 Gems = ₹1.00* (Instant Cloud Save)\n\n👇 Tap *Play Game* below to start earning!\n\n🎮 *More Earning Games:*\n👉 https://t.me/TapToPaisa_Official_bot?start=${chatId}\n👉 https://t.me/BlockPaisa_bot?start=${chatId}`;
+      const welcome = `🧪 <b>Welcome to Color Paisa!</b>\n\n💧 Sort colors, complete levels, and earn real rewards!\n💰 <b>1,000 Gems = ₹1.00</b> (Instant Cloud Save)\n\n👇 Tap <b>Play Game</b> below to start earning!\n\n🎮 <b>More Earning Games:</b>\n👉 https://t.me/TapToPaisa_Official_bot?start=${chatId}\n👉 https://t.me/BlockPaisa_bot?start=${chatId}`;
 
       await fetch(tgApi, {
         method: 'POST',
@@ -33,7 +31,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           chat_id: chatId,
           text: welcome,
-          parse_mode: 'Markdown',
+          parse_mode: 'HTML',
           reply_markup: {
             inline_keyboard: [
               [{ text: '🎮 Play Game', web_app: { url: WEBAPP_URL } }],
@@ -41,7 +39,7 @@ export default async function handler(req, res) {
                 { text: '📜 Transaction History', callback_data: 'history' },
                 { text: '👥 Refer and Earn', callback_data: 'refer' }
               ],
-              [{ text: '🎧 Customer Support', url: 'https://t.me/ColorPaisaSupport' }]
+              [{ text: '🎧 Customer Support', url: 'https://t.me/ColorPaisaBot' }]
             ]
           }
         })
@@ -49,21 +47,20 @@ export default async function handler(req, res) {
     }
   }
 
-  // 3. Inline Button Clicks (Refer & History)
   if (body.callback_query) {
     const chatId = body.callback_query.message.chat.id;
     const data = body.callback_query.data;
     let reply = '';
     if (data === 'refer') {
-      reply = `👥 *Refer & Earn!*\n\nShare your link with friends. When 1 friend joins & reaches Level 10, your ₹10 withdrawal unlocks!\n\n🔗 *Your Link:*\n\`https://t.me/ColorPaisaBot?start=ref_${chatId}\``;
+      reply = `👥 <b>Refer & Earn!</b>\n\nShare your link with friends. When 1 friend joins & reaches Level 10, your ₹10 withdrawal unlocks!\n\n🔗 <b>Your Link:</b>\n<code>https://t.me/ColorPaisaBot?start=ref_${chatId}</code>`;
     } else if (data === 'history') {
-      reply = `📜 *Transaction History*\n\nOpen the game and check the *Wallet* tab to view your Gems, Withdrawal status & Loyalty Bonus!`;
+      reply = `📜 <b>Transaction History</b>\n\nOpen the game and check the <b>Wallet</b> tab to view your Gems, Withdrawal status & Loyalty Bonus!`;
     }
     if (reply) {
       await fetch(tgApi, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'Markdown' })
+        body: JSON.stringify({ chat_id: chatId, text: reply, parse_mode: 'HTML' })
       });
     }
   }
