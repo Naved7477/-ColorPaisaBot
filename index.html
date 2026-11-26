@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Color Paisa - Sort & Earn</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <script src='//niphaumeenses.net/vignette.min.js' data-zone='YOUR_ZONE_ID' data-sdk='show_YOUR_ZONE_ID'></script>
+  <script src='//libtl.com/sdk.js' data-zone='12356158' data-sdk='show_12356158'></script>
   <style>
     :root { --bg:#120826; --card:#1e103b; --bdr:#4c2889; --purp:#9d4edd; --gold:#fbbf24; --gdark:#d97706; --grn:#65d315; --grnd:#3f9106; }
     * { box-sizing:border-box; margin:0; padding:0; font-family:sans-serif; -webkit-tap-highlight-color:transparent; }
@@ -173,9 +173,9 @@
       if (adCount <= 0) return onSuccess();
       let watched = 0;
       function playNext() {
-        if (typeof show_YOUR_ZONE_ID === 'function') {
-          show_YOUR_ZONE_ID().then(() => { watched++; if (watched < adCount) playNext(); else onSuccess(); }).catch(() => alert('Ad failed to load.'));
-        } else {
+                if (typeof show_12356158 === 'function') {
+          show_12356158().then(() => { watched++; if (watched < adCount) playNext(); else onSuccess(); }).catch(() => alert('Ad failed to load.'));
+                } else {
           alert(`Simulated Monetag Ad (${watched + 1}/${adCount}) Completed!`);
           watched++; if (watched < adCount) playNext(); else onSuccess();
         }
